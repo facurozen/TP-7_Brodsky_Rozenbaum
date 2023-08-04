@@ -6,43 +6,48 @@ import Card from 'react-bootstrap/Card';
 import { prettyDOM } from "@testing-library/react";
 
 const ListadoProducto = () => {
-  const [productos, setProductos] = useState([]); // array de productos!!
-  const [random, setRandom] = useState({});
+  const [productos, setProductos] = useState([]);
+  const [random, setRandom] = useState([]);
   const [loading, setLoading] = useState(true);
-  let index1 = 20;
+
   useEffect(() => {
     axios.get('https://dummyjson.com/products')
       .then(response => {
         const arrayProd = response.data.products;
         setProductos(arrayProd);
         cambiarRandom(arrayProd);
-        console.log(arrayProd);
       })
       .finally(() => {
-        setLoading(false); // Indicar que la carga ha finalizado
+        setLoading(false);
       });
   }, []);
 
   const cambiarRandom = (arrayProd) => {
-    setRandom(arrayProd[Math.floor(Math.random() * arrayProd.length)])
-    console.log(random);
-  };
+    // Utilizamos un arreglo aleatorio de índices sin repetición
+    const randomIndexes = Array.from({ length: arrayProd.length }, (_, index) => index);
+    for (let index = randomIndexes.length - 1; index > 0; index--) {
+      const j = Math.floor(Math.random() * (index + 1));
+      [randomIndexes[index], randomIndexes[j]] = [randomIndexes[j], randomIndexes[index]];
+    }
 
+    // Tomamos los primeros 6 elementos del array original en función de los índices aleatorios
+    const randomProducts = randomIndexes.slice(0, 6).map(index => arrayProd[index]);
+    setRandom(randomProducts);
+  };
 
   return (
     <>
       {loading ? (
         <div>Cargando...</div>
       ) : (
-        Array.from({length : 6}).map((_) => (
-          <Card key={index1} style={{ width: '18rem' }}>            
-            <Card.Img variant="top" src={productos[index1].thumbnail} />
+        random.map((product, index) => (
+          <Card key={index} style={{ width: '18rem' }}>
+            <Card.Img variant="top" src={product.thumbnail} />
             <Card.Body>
-              <Card.Title>{productos[index1].title}</Card.Title>
-              <Card.Text>{productos[index1].description}</Card.Text>
+              <Card.Title>{product.title}</Card.Title>
+              <Card.Text>{product.description}</Card.Text>
             </Card.Body>
           </Card>
-          
         ))
       )}
     </>
